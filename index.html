@@ -108,6 +108,22 @@ a.site{background:#f4ede2;color:#8b4e1e;border-radius:999px;padding:8px 10px;tex
   body.exporting{background:white!important}
 }
 
+
+.customStep .stepbox{border-style:dashed;border-color:#b56b2a;background:#fffdf7}
+.manualModal{position:fixed;inset:0;background:rgba(10,20,25,.6);z-index:80;display:none;padding:18px;overflow:auto}
+.manualModal.open{display:block}
+.manualSheet{max-width:560px;margin:28px auto;background:#fffaf2;border:1px solid var(--line);border-radius:24px;box-shadow:0 24px 80px rgba(0,0,0,.28);overflow:hidden}
+.manualHead{background:linear-gradient(135deg,var(--brand),#19708a);color:#fff;padding:18px}.manualHead h2{margin:0;font-size:22px}
+.manualBody{padding:16px}.formRow{display:grid;gap:6px;margin-bottom:12px}.formRow label{font-weight:900;color:var(--brand);font-size:13px}
+.formRow input,.formRow select,.formRow textarea{border:1px solid var(--line);border-radius:14px;background:#fff;padding:10px;font:inherit;color:var(--ink)}
+.formRow textarea{min-height:90px;resize:vertical}
+body.exporting header,body.exporting main,body.exporting .footerbar,body.exporting .photoModal,body.exporting .tourModal,body.exporting .manualModal{display:none!important}
+body.exporting{background:white!important}.exporting .exportPanel{display:block!important;background:white;color:#222;min-height:100vh}
+.exportToolbar{position:sticky;top:0;background:#fff;border-bottom:1px solid #ddd;padding:10px;display:flex;gap:8px;flex-wrap:wrap;z-index:5}
+.exportContent{padding:24px;max-width:900px;margin:0 auto;font-family:Arial,sans-serif}
+.exportHint{background:#fff5dc;border-left:5px solid #b56b2a;padding:10px;margin:10px 0;color:#4e3c25}
+@media print{.exportToolbar{display:none!important}.exportContent{padding:0}.exporting .exportPanel{display:block!important}}
+
 @media(max-width:700px){.photoGrid{grid-template-columns:1fr}.photoCard img{height:260px}}
 
 
@@ -138,7 +154,7 @@ a.site{background:#f4ede2;color:#8b4e1e;border-radius:999px;padding:8px 10px;tex
 <header>
   <div class="top">
     <div><h1>Roadbook Lac de Côme</h1><div class="sub">Camping Magic Lake – Dongo · 29/07 → 02/08</div></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn secondary" onclick="toggleAllDone()">✓ Tout cocher</button><button class="btn" onclick="exportTravelPDF()">📘 Export PDF</button></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn secondary" onclick="toggleAllDone()">✓ Tout cocher</button><button class="btn" onclick="exportTravelPDF()">📘 Export PDF</button><button class="btn secondary" onclick="openManualStepModal()">➕ Ajouter étape</button></div>
   </div>
   <div class="nav" id="nav"></div>
 </header>
@@ -347,6 +363,7 @@ a.site{background:#f4ede2;color:#8b4e1e;border-radius:999px;padding:8px 10px;tex
   <button class="btn" onclick="showDay('day4')">J4</button>
   <button class="btn" onclick="showDay('day5')">J5</button>
   <button class="btn" onclick="showDay('lexique')">Lexique</button>
+  <button class="btn" onclick="openManualStepModal()">➕ Étape</button>
   <button class="btn secondary" onclick="showDay('tools')">Infos</button>
 </div>
 
@@ -589,30 +606,90 @@ function exportTravelPDF(){
   }
   const panel=document.getElementById('exportPanel');
   const totalPhotos=checked.reduce((n,st)=>n+getPhotos(st.dataset.id).length,0);
-  let htmlOut='<div class="exportCover"><h1>Lac de Côme</h1><p>29 juillet → 2 août 2026</p><p>Camping Magic Lake – Dongo</p><p>'+checked.length+' étapes réalisées · '+totalPhotos+' photos ajoutées</p></div>';
+  let htmlOut='<div class="exportToolbar"><button class="btn" onclick="printExportPDF()">📘 Imprimer / Enregistrer en PDF</button><button class="btn secondary" onclick="downloadExportHTML()">💾 Télécharger HTML souvenir</button><button class="btn secondary" onclick="closeExportView()">Retour</button></div><div class="exportContent">';
+  htmlOut+='<div class="exportHint"><b>Sur iPhone/Safari :</b> si le bouton PDF ne réagit pas, utilise Partager → Imprimer → pincer l’aperçu → Enregistrer dans Fichiers.</div>';
+  htmlOut+='<div class="exportCover"><h1>Lac de Côme</h1><p>29 juillet → 2 août 2026</p><p>Camping Magic Lake – Dongo</p><p>'+checked.length+' étapes réalisées · '+totalPhotos+' photos ajoutées</p></div>';
   let currentDay='';
   checked.forEach(st=>{
     const sid=st.dataset.id;
     const day=getStepDay(st);
-    if(day!==currentDay){
-      currentDay=day;
-      htmlOut+='<section class="exportDay"><h2>'+escapeHtml(day)+'</h2></section>';
-    }
-    const title=getStepTitle(st);
-    const time=getStepTime(st);
-    const comment=getComment(sid);
-    const photo=getFavoritePhoto(sid);
+    if(day!==currentDay){currentDay=day;htmlOut+='<section class="exportDay"><h2>'+escapeHtml(day)+'</h2></section>';}
+    const title=getStepTitle(st), time=getStepTime(st), comment=getComment(sid), photo=getFavoritePhoto(sid);
     htmlOut+='<article class="exportStep"><h3>✔ '+escapeHtml(title)+'</h3><div><b>Heure prévue :</b> '+escapeHtml(time)+'</div>';
     if(photo) htmlOut+='<img src="'+photo+'" alt="Photo souvenir">';
     if(comment) htmlOut+='<div class="exportComment">'+escapeHtml(comment)+'</div>';
-    const tour=TOUR_SUMMARY[sid]||'';
+    const tour=TOUR_SUMMARY[sid]||getManualStepSummary(sid)||'';
     if(tour) htmlOut+='<div class="exportTour"><b>Info touristique :</b> '+escapeHtml(tour)+'</div>';
     htmlOut+='</article>';
   });
+  htmlOut+='</div>';
   panel.innerHTML=htmlOut;
   document.body.classList.add('exporting');
-  setTimeout(()=>{window.print(); setTimeout(()=>document.body.classList.remove('exporting'),500);},250);
+  window.scrollTo(0,0);
 }
+function printExportPDF(){setTimeout(()=>window.print(),100);}
+function closeExportView(){document.body.classList.remove('exporting');}
+function downloadExportHTML(){
+  const content=document.querySelector('#exportPanel .exportContent');
+  if(!content){alert('Génère le carnet avant de le télécharger.');return;}
+  const doc='<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Carnet Lac de Côme</title><style>body{font-family:Arial,sans-serif;margin:24px;color:#222}.exportCover{text-align:center;min-height:420px;display:flex;flex-direction:column;justify-content:center;border-bottom:2px solid #ddd}.exportDay{page-break-before:always}.exportStep{page-break-inside:avoid;border-bottom:1px solid #ddd;padding:16px 0}.exportStep h3{color:#0f4c5c}.exportStep img{width:100%;max-height:360px;object-fit:cover;border-radius:12px}.exportComment{background:#f7f1e7;border-left:5px solid #b56b2a;padding:10px;margin:8px 0;white-space:pre-wrap}.exportTour{font-size:13px;color:#444;line-height:1.45}.exportHint{display:none}@media print{body{margin:0}}</style></head><body>'+content.innerHTML+'</body></html>';
+  const blob=new Blob([doc],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='carnet-voyage-lac-de-come.html';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+function customStepsKey(){return 'roadbook-custom-steps';}
+function getCustomSteps(){try{return JSON.parse(localStorage.getItem(customStepsKey())||'[]')}catch(e){return []}}
+function saveCustomSteps(arr){localStorage.setItem(customStepsKey(),JSON.stringify(arr));}
+function openManualStepModal(){
+  const current=document.querySelector('.day.active');
+  const sel=document.getElementById('manualDay');
+  if(current && /^day[1-5]$/.test(current.id)) sel.value=current.id;
+  document.getElementById('manualTitle').value='';
+  document.getElementById('manualDesc').value='';
+  document.getElementById('manualModal').classList.add('open');
+}
+function closeManualStepModal(){document.getElementById('manualModal').classList.remove('open');}
+function saveManualStep(){
+  const day=document.getElementById('manualDay').value;
+  const time=document.getElementById('manualTime').value||'12:00';
+  const title=document.getElementById('manualTitle').value.trim();
+  const desc=document.getElementById('manualDesc').value.trim();
+  if(!title){alert('Donne un nom à l’étape.');return;}
+  const id='custom-'+Date.now().toString(36)+'-'+Math.random().toString(16).slice(2,7);
+  const arr=getCustomSteps();
+  arr.push({id,day,time,title,desc,created:new Date().toISOString()});
+  saveCustomSteps(arr);
+  renderCustomSteps();loadChecks();loadComments();renderPhotoStrips();showDay(day);closeManualStepModal();
+}
+function deleteManualStep(id){
+  if(!confirm('Supprimer cette étape libre ?'))return;
+  const arr=getCustomSteps().filter(s=>s.id!==id);
+  saveCustomSteps(arr);
+  localStorage.removeItem(commentKey(id));
+  localStorage.removeItem(photosKey(id));
+  renderCustomSteps();loadChecks();loadComments();renderPhotoStrips();
+}
+function getManualStepSummary(id){const s=getCustomSteps().find(x=>x.id===id);return s?(s.desc||'Étape ajoutée librement pendant le voyage.'):'';}
+function renderCustomSteps(){
+  document.querySelectorAll('.customStep').forEach(e=>e.remove());
+  getCustomSteps().forEach(s=>{
+    const day=document.getElementById(s.day); if(!day)return;
+    const timeline=day.querySelector('.timeline'); if(!timeline)return;
+    const div=document.createElement('div');
+    div.className='step customStep'; div.dataset.id=s.id;
+    div.innerHTML='<div class="time">'+escapeHtml(s.time)+'</div><div class="stepbox"><div class="stephead"><b>'+escapeHtml(s.title)+'</b><input class="check" type="checkbox"></div><div class="meta">'+escapeHtml(s.desc||'Étape ajoutée librement pendant le voyage.')+'</div><div class="actions"><button class="btn secondary" onclick="openPhotoPicker(\''+s.id+'\')">📸 Photo</button><button class="btn secondary" onclick="showGallery(\''+s.id+'\')">🖼️</button><button class="btn secondary" onclick="deleteManualStep(\''+s.id+'\')">Supprimer</button></div><div class="photoStrip" id="photos-'+s.id+'"></div><div class="commentBox"><label>📝 Commentaire souvenir</label><textarea id="comment-'+s.id+'" placeholder="Note personnelle sur cette étape..." oninput="saveComment(\''+s.id+'\', this.value)"></textarea></div></div>';
+    timeline.appendChild(div);
+    sortTimeline(timeline);
+  });
+}
+function sortTimeline(timeline){
+  const steps=[...timeline.querySelectorAll(':scope > .step')];
+  steps.sort((a,b)=>(a.querySelector('.time')?.textContent||'99:99').localeCompare(b.querySelector('.time')?.textContent||'99:99'));
+  steps.forEach(s=>timeline.appendChild(s));
+}
+
+renderCustomSteps();
 
 loadChecks();
 loadComments();
@@ -624,6 +701,23 @@ if('serviceWorker' in navigator && location.protocol.startsWith('http')){
 </script>
 
 
+
+
+<div class="manualModal" id="manualModal" onclick="if(event.target.id==='manualModal')closeManualStepModal()">
+  <div class="manualSheet">
+    <div class="manualHead">
+      <button class="closeModal" onclick="closeManualStepModal()">Fermer ×</button>
+      <h2>Ajouter une étape libre</h2>
+    </div>
+    <div class="manualBody">
+      <div class="formRow"><label>Jour</label><select id="manualDay"><option value="day1">Jour 1</option><option value="day2">Jour 2</option><option value="day3">Jour 3</option><option value="day4">Jour 4</option><option value="day5">Jour 5</option></select></div>
+      <div class="formRow"><label>Heure</label><input id="manualTime" type="time" value="12:00"></div>
+      <div class="formRow"><label>Nom de l’étape</label><input id="manualTitle" placeholder="Ex : Glacier à Menaggio"></div>
+      <div class="formRow"><label>Commentaire / info simple</label><textarea id="manualDesc" placeholder="Pourquoi on ajoute cette étape, ce qu’on a vu, adresse utile..."></textarea></div>
+      <div class="actions"><button class="btn" onclick="saveManualStep()">Ajouter l’étape</button><button class="btn secondary" onclick="closeManualStepModal()">Annuler</button></div>
+    </div>
+  </div>
+</div>
 
 <div class="exportPanel" id="exportPanel"></div>
 
