@@ -6,6 +6,31 @@
 <title>Roadbook Lac de Côme – Dongo</title>
 <meta name="theme-color" content="#0f4c5c">
 <style>
+
+.appTop{padding:12px 14px;display:flex;gap:10px;align-items:center;justify-content:space-between}
+.burgerBtn{border:1px solid var(--line);background:#fff;color:var(--brand);width:44px;height:44px;border-radius:16px;font-size:24px;font-weight:900;box-shadow:0 4px 14px rgba(0,0,0,.06)}
+.menuOverlay{position:fixed;inset:0;background:rgba(10,20,25,.45);backdrop-filter:blur(4px);z-index:90;display:none}
+.menuOverlay.open{display:block}
+.sideMenu{position:absolute;right:0;top:0;bottom:0;width:min(380px,92vw);background:#fffaf2;border-left:1px solid var(--line);box-shadow:-18px 0 60px rgba(0,0,0,.25);padding:16px;overflow:auto}
+.menuHead{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+.menuHead h2{margin:0;color:var(--brand)}
+.menuClose{border:0;background:#f3e4cf;color:#7a4318;border-radius:999px;width:40px;height:40px;font-size:24px;font-weight:900}
+.menuStats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0 16px}
+.menuStats div{background:#fff;border:1px solid var(--line);border-radius:16px;padding:10px;text-align:center}
+.menuStats b{display:block;font-size:22px;color:var(--brand)}
+.menuStats span{font-size:12px;color:var(--muted)}
+.menuAction{width:100%;border:0;background:var(--brand);color:#fff;border-radius:16px;padding:14px;margin:7px 0;text-align:left;font-weight:900;font-size:15px}
+.menuAction.secondary{background:#fff;border:1px solid var(--line);color:var(--brand)}
+header .nav{padding-top:0}
+header h1{font-size:18px;margin:0;line-height:1.1}
+.exportSouvenirs{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:18px 0}
+.exportSouvenirs img{width:150px;height:105px;object-fit:cover;border-radius:12px;border:1px solid #ddd}
+.exportAllPhotos{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.exportAllPhotos img{width:100%;height:135px;object-fit:cover;border-radius:10px;margin:0}
+.exportAllPhotos img.mainPhoto{grid-column:span 3;height:320px;border:4px solid #0f4c5c}
+@media(max-width:700px){.exportAllPhotos{grid-template-columns:repeat(2,1fr)}.exportAllPhotos img.mainPhoto{grid-column:span 2;height:260px}.exportSouvenirs img{width:46%;height:110px}}
+@media print{.exportAllPhotos{grid-template-columns:repeat(3,1fr)}.exportAllPhotos img.mainPhoto{grid-column:span 3;height:320px}}
+
 :root{
   --bg:#f6f1e8; --card:#fffaf2; --ink:#21313a; --muted:#6b7478;
   --brand:#0f4c5c; --brand2:#b56b2a; --ok:#2e7d32; --line:#e2d7c6;
@@ -20,8 +45,8 @@ h1{font-size:18px;margin:0;line-height:1.1}.sub{font-size:12px;color:var(--muted
 .btn.secondary{background:#fff;border:1px solid var(--line);color:var(--brand)}
 .btn.info{background:#f3e4cf;color:#7a4318}
 .nav{display:flex;gap:8px;overflow:auto;padding:0 14px 12px}
-.nav button{white-space:nowrap;border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 12px;font-weight:700;color:var(--ink)}
-.nav button.active{background:var(--brand);color:white;border-color:var(--brand)}
+.nav button{white-space:nowrap;border:0;border-bottom:3px solid transparent;background:transparent;border-radius:0;padding:9px 10px;font-weight:800;color:var(--ink)}
+.nav button.active{background:transparent;color:var(--brand);border-bottom-color:var(--brand)}
 main{padding:16px;max-width:980px;margin:0 auto 90px}
 .hero{background:linear-gradient(135deg,var(--brand),#19708a);color:white;border-radius:26px;padding:22px;box-shadow:var(--shadow);overflow:hidden;position:relative}
 .hero:after{content:"";position:absolute;right:-50px;top:-60px;width:180px;height:180px;background:rgba(255,255,255,.12);border-radius:50%}
@@ -152,12 +177,34 @@ body.exporting{background:white!important}.exporting .exportPanel{display:block!
 </head>
 <body>
 <header>
-  <div class="top">
-    <div><h1>Roadbook Lac de Côme</h1><div class="sub">Camping Magic Lake – Dongo · 29/07 → 02/08</div></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn secondary" onclick="toggleAllDone()">✓ Tout cocher</button><button class="btn" onclick="exportTravelPDF()">📘 Export PDF</button><button class="btn secondary" onclick="openManualStepModal()">➕ Ajouter étape</button></div>
+  <div class="appTop">
+    <div>
+      <h1>🏕️ Roadbook Lac de Côme</h1>
+      <div class="sub">29/07 → 02/08 · Camping Magic Lake – Dongo</div>
+    </div>
+    <button class="burgerBtn" onclick="openMenu()" aria-label="Ouvrir le menu">☰</button>
   </div>
   <div class="nav" id="nav"></div>
 </header>
+
+<div class="menuOverlay" id="menuOverlay" onclick="if(event.target.id==='menuOverlay')closeMenu()">
+  <aside class="sideMenu">
+    <div class="menuHead">
+      <div><h2>Menu</h2><div class="sub">Carnet de voyage</div></div>
+      <button class="menuClose" onclick="closeMenu()">×</button>
+    </div>
+    <div class="menuStats">
+      <div><b id="statSteps">0</b><span>étapes</span></div>
+      <div><b id="statPhotos">0</b><span>photos</span></div>
+      <div><b id="statComments">0</b><span>notes</span></div>
+    </div>
+    <button class="menuAction" onclick="closeMenu(); openManualStepModal();">➕ Ajouter une étape</button>
+    <button class="menuAction" onclick="closeMenu(); openPhotoPicker('general');">📸 Ajouter une photo souvenir</button>
+    <button class="menuAction" onclick="closeMenu(); exportTravelPDF();">📘 Générer le carnet PDF</button>
+    <button class="menuAction secondary" onclick="closeMenu(); showDay('lexique');">📚 Lexique français / italien</button>
+    <button class="menuAction secondary" onclick="closeMenu(); showDay('tools');">ℹ️ Infos pratiques</button>
+  </aside>
+</div>
 
 <main>
 <section class="card photoHome">
@@ -356,17 +403,6 @@ body.exporting{background:white!important}.exporting .exportPanel{display:block!
 </section>
 </main>
 
-<div class="footerbar">
-  <button class="btn" onclick="showDay('day1')">J1</button>
-  <button class="btn" onclick="showDay('day2')">J2</button>
-  <button class="btn" onclick="showDay('day3')">J3</button>
-  <button class="btn" onclick="showDay('day4')">J4</button>
-  <button class="btn" onclick="showDay('day5')">J5</button>
-  <button class="btn" onclick="showDay('lexique')">Lexique</button>
-  <button class="btn" onclick="openManualStepModal()">➕ Étape</button>
-  <button class="btn secondary" onclick="showDay('tools')">Infos</button>
-</div>
-
 <script>
 const TOURISM_INFO = {"info-simplon": {"title": "Le Simplon – grand passage entre Suisse et Italie", "intro": "Un itinéraire alpin historique qui relie le Valais suisse au Piémont italien, avec une forte impression de bascule entre deux mondes.", "blocks": [["Histoire", "Le Simplon a longtemps été un axe stratégique de franchissement des Alpes. Les routes, puis les infrastructures modernes, ont renforcé le lien entre la Suisse romande, le Valais et l’Italie du Nord. C’est une belle entrée en matière pour rejoindre les lacs italiens."], ["À remarquer sur la route", "Les paysages deviennent progressivement plus minéraux et alpins avant la descente vers Domodossola. C’est aussi un bon moment pour faire une pause et éviter d’enchaîner trop longtemps de conduite."], ["Conseils pratiques", "Prévoir une pause courte, vérifier la météo en montagne et garder de l’eau accessible. En été, la route est généralement agréable mais peut être ralentie par les travaux ou le trafic touristique."]], "links": [["GPS Simplon", "https://maps.google.com/?q=Simplon+Pass"], ["Wikipedia", "https://fr.wikipedia.org/wiki/Col_du_Simplon"]]}, "info-domodossola": {"title": "Domodossola – porte italienne des Alpes", "intro": "Une pause idéale entre montagne suisse et Italie des lacs, avec un centre ancien vivant et très italien.", "blocks": [["Histoire", "Domodossola est la ville principale de la vallée de l’Ossola. Elle a longtemps servi de carrefour entre passages alpins, commerce local et routes vers le lac Majeur."], ["À ne pas manquer", "La Piazza Mercato est le cœur historique : arcades, façades colorées, cafés et ambiance de petite ville italienne. Même une pause de 45 minutes suffit pour ressentir le changement d’atmosphère."], ["Conseils pratiques", "Se garer près de la Piazza Mercato ou des parkings périphériques, puis visiter à pied. C’est un bon lieu pour déjeuner sans perdre trop de temps."]], "links": [["GPS Piazza Mercato", "https://maps.google.com/?q=Piazza+Mercato+Domodossola"], ["Wikipedia", "https://fr.wikipedia.org/wiki/Domodossola"]]}, "info-dongo": {"title": "Dongo – village du haut lac et mémoire de 1945", "intro": "Un village plus local que touristique, idéal pour une première balade douce depuis le camping.", "blocks": [["Histoire", "Dongo appartient au haut lac de Côme, une zone historiquement liée aux échanges entre lac, vallées alpines et territoires lombards. Le village est surtout connu pour son rôle dans les derniers jours de la Seconde Guerre mondiale en Italie."], ["Épisode historique majeur", "Le 27 avril 1945, Benito Mussolini est arrêté dans la région de Dongo alors qu’il tente de fuir vers le nord. Cet épisode marque symboliquement la fin du régime fasciste en Italie."], ["À voir", "Front de lac, vieux port, Palazzo Manzi, ruelles du centre. L’intérêt est surtout l’ambiance paisible et locale, parfaite en soirée après l’arrivée."], ["Conseils pratiques", "Depuis le Camping Magic Lake, privilégier la marche. Pas besoin de reprendre la voiture pour une première découverte."]], "links": [["GPS Dongo", "https://maps.google.com/?q=Dongo+CO+Italy"], ["Wikipedia", "https://fr.wikipedia.org/wiki/Dongo"]]}, "info-ferry": {"title": "Les ferries du centre du lac", "intro": "Menaggio, Varenna et Bellagio forment le triangle central du lac : le ferry est le moyen le plus simple et le plus agréable de les relier.", "blocks": [["Pourquoi prendre le ferry", "Le lac de Côme se visite beaucoup mieux par l’eau que par la route, surtout en été. Le ferry évite les parkings compliqués de Bellagio et Varenna et offre de très belles vues."], ["Organisation", "Arriver 15 à 20 minutes avant le départ. Vérifier les horaires la veille et le matin même, car ils peuvent varier selon la saison, les jours et les conditions de navigation."], ["Conseil de trajet", "Se garer à Menaggio pour la journée, puis faire Menaggio → Varenna → Bellagio → Menaggio. C’est la boucle la plus fluide depuis Dongo."]], "links": [["Horaires officiels Navigazione Laghi", "https://www.navigazionelaghi.it/en/tickets-and-timetables-lake-como/"], ["Embarcadère Menaggio", "https://maps.google.com/?q=Menaggio+Ferry+Terminal"]]}, "info-varenna": {"title": "Varenna – village romantique de la rive orientale", "intro": "Un ancien village de pêcheurs, coloré et très photogénique, posé entre lac et montagne.", "blocks": [["Histoire", "Varenna est un bourg ancien de la rive orientale du lac de Côme. Son histoire médiévale est liée aux conflits entre Côme et Milan. En 1169, après la destruction de l’Isola Comacina, des habitants se seraient réfugiés à Varenna."], ["À ne pas manquer", "La Passeggiata degli Innamorati, le petit port, les ruelles qui montent, l’église San Giorgio et les vues vers Bellagio. Le village se découvre lentement, à pied."], ["Ambiance", "Varenna est plus douce que Bellagio : moins mondaine, plus intime, avec un charme de village serré contre la pente."], ["Conseils pratiques", "Arriver tôt par ferry. Prévoir de bonnes chaussures pour les escaliers et ruelles. Éviter la voiture si possible, les parkings sont limités."]], "links": [["Office de tourisme Varenna", "https://varennaturismo.com/en/"], ["Wikipedia", "https://fr.wikipedia.org/wiki/Varenna"], ["GPS Varenna", "https://maps.google.com/?q=Varenna"]]}, "info-monastero": {"title": "Villa Monastero – huit siècles d’histoire à Varenna", "intro": "Une villa-musée et un jardin botanique en balcon sur le lac, née d’un ancien monastère.", "blocks": [["Histoire", "Le site de la Villa Monastero trouve son origine dans un ancien monastère féminin médiéval. L’ensemble a été transformé au fil des siècles en résidence aristocratique, puis en villa-musée."], ["Ce qu’il faut voir", "Le jardin botanique longe le lac sur une longue distance, avec essences exotiques, cyprès, terrasses et vues vers le centre du lac. La maison-musée permet de comprendre l’évolution du goût et du mode de vie aristocratique."], ["Temps conseillé", "Compter 1h à 1h30 pour les jardins, davantage si vous visitez aussi la maison-musée."], ["Conseils pratiques", "Vérifier les horaires et billets en ligne. En été, la visite du matin est plus agréable que l’après-midi chaude."]], "links": [["Site officiel Villa Monastero", "https://www.villamonastero.eu/en/home_en/"], ["Horaires & billets", "https://www.villamonastero.eu/en/opening-hours-ticket/"], ["Wikipedia", "https://fr.wikipedia.org/wiki/Villa_Monastero"]]}, "info-bellagio": {"title": "Bellagio – la perle du lac de Côme", "intro": "Le village le plus célèbre du lac, installé au point où les branches du lac se rejoignent.", "blocks": [["Histoire", "Bellagio occupe une position stratégique sur le promontoire qui sépare les branches du lac. Son histoire mêle implantation ancienne, villas aristocratiques et développement touristique dès le XIXe siècle."], ["À ne pas manquer", "Salita Serbelloni, Piazza Mazzini, basilique San Giacomo, ruelles en escalier, boutiques et vues sur les trois branches du lac."], ["Ambiance", "Bellagio est très touristique en été, mais conserve beaucoup de charme si l’on s’éloigne des quais principaux et que l’on monte dans les ruelles."], ["Conseils pratiques", "Éviter la voiture : venir en ferry depuis Varenna ou Menaggio. Prévoir un peu de marge pour les traversées retour."]], "links": [["Site touristique Bellagio", "https://www.bellagiolakecomo.com/en"], ["Wikipedia", "https://fr.wikipedia.org/wiki/Bellagio_(Italie)"], ["GPS Bellagio", "https://maps.google.com/?q=Bellagio+Lake+Como"]]}, "info-melzi": {"title": "Jardins de la Villa Melzi – élégance romantique", "intro": "Une promenade raffinée au bord de l’eau, dans l’un des plus beaux jardins historiques de Bellagio.", "blocks": [["Histoire", "La Villa Melzi fut aménagée au début du XIXe siècle pour Francesco Melzi d’Eril, figure politique de l’époque napoléonienne en Italie. Les jardins traduisent le goût romantique de l’époque."], ["À ne pas manquer", "Les grandes pelouses, les perspectives sur le lac, les arbres remarquables, les sculptures et la promenade le long de l’eau."], ["Temps conseillé", "Compter 45 minutes à 1h15 selon rythme. C’est une visite plus contemplative que muséale."], ["Conseils pratiques", "Vérifier les horaires avant de s’engager. La visite est particulièrement agréable en fin d’après-midi, quand la lumière est plus douce."]], "links": [["Site officiel Villa Melzi", "https://giardinidivillamelzi.it/en/"], ["Wikipedia", "https://fr.wikipedia.org/wiki/Villa_Melzi_d%27Eril"], ["GPS Villa Melzi", "https://maps.google.com/?q=Villa+Melzi+Bellagio"]]}, "info-balbianello": {"title": "Villa del Balbianello – le promontoire mythique", "intro": "L’un des lieux les plus spectaculaires du lac de Côme, perché sur un promontoire boisé à Lenno.", "blocks": [["Histoire", "La Villa del Balbianello a été construite à la fin du XVIIIe siècle sur les vestiges d’un ancien couvent franciscain. Elle est associée au cardinal Durini puis, au XXe siècle, à l’explorateur Guido Monzino, dernier propriétaire privé."], ["À ne pas manquer", "La loggia panoramique, les terrasses, les jardins taillés, les vues sur les deux côtés du promontoire et l’arrivée à pied ou en bateau depuis Lenno."], ["Cinéma et anecdotes", "La villa est célèbre pour ses apparitions dans des films, notamment Casino Royale et Star Wars: Episode II. C’est aussi l’une des villas les plus demandées du lac."], ["Conseils pratiques", "Réserver en ligne, surtout en haute saison. Choisir entre parc seul ou villa + parc. Arriver tôt et prévoir 20–25 minutes de marche depuis Lenno si vous ne prenez pas le bateau-navette."]], "links": [["Site officiel FAI / billets", "https://fondoambiente.it/villa-del-balbianello-eng"], ["Wikipedia", "https://fr.wikipedia.org/wiki/Villa_Balbianello"], ["GPS Villa", "https://maps.google.com/?q=Villa+del+Balbianello"]]}, "info-greenway": {"title": "Greenway del Lago di Como – villages et villas à pied", "intro": "Une promenade douce qui relie plusieurs villages de la rive ouest, entre lac, églises, jardins et anciennes voies.", "blocks": [["Principe", "La Greenway del Lago di Como suit une partie de la rive ouest sur environ 11 km. Elle permet de traverser des villages et de rejoindre des sites majeurs sans reprendre la voiture."], ["À voir sur la portion Lenno–Tremezzo", "Ruelles anciennes, vues sur Bellagio, petites églises, villas et passages en balcon au-dessus du lac."], ["Conseils pratiques", "Faire seulement une portion si la chaleur est forte. Prévoir eau, chaussures confortables et possibilité de raccourcir par bus, taxi ou retour à pied selon énergie."]], "links": [["Site officiel Greenway", "https://greenwaylagodicomo.com/en/"], ["GPS Greenway", "https://maps.google.com/?q=Greenway+del+Lago+di+Como+Lenno+Tremezzo"]]}, "info-carlotta": {"title": "Villa Carlotta – art, botanique et vues sur Bellagio", "intro": "Une grande villa-musée de Tremezzo, célèbre pour ses collections d’art et ses jardins botaniques.", "blocks": [["Histoire", "Villa Carlotta fut construite à la fin du XVIIe siècle par le marquis Giorgio Clerici. Elle connut son apogée avec Gian Battista Sommariva, collectionneur qui enrichit la villa d’œuvres d’art importantes."], ["À ne pas manquer", "Les jardins botaniques, les escaliers, les perspectives vers Bellagio, ainsi que les sculptures et collections présentées dans la villa."], ["Temps conseillé", "1h30 à 2h pour une visite confortable. Après Balbianello, c’est une option riche mais plus dense."], ["Conseils pratiques", "Vérifier les horaires et la billetterie le matin même. À privilégier si vous avez encore de l’énergie après la Greenway."]], "links": [["Site officiel Villa Carlotta", "https://www.villacarlotta.it/en/"], ["Horaires & visite", "https://www.villacarlotta.it/en/visit/"], ["Wikipedia", "https://fr.wikipedia.org/wiki/Villa_Carlotta"]]}, "info-gravedona": {"title": "Gravedona – art roman et haut lac", "intro": "Un bourg historique du nord-ouest du lac, plus authentique et moins fréquenté que les villages du centre.", "blocks": [["Histoire", "Gravedona fut un centre important du haut lac, riche d’histoire religieuse et artistique. Avec Dongo et Sorico, elle appartenait au territoire historique des Tre Pievi."], ["À ne pas manquer", "Le front de lac, les ruelles anciennes, les vues vers les montagnes et surtout Santa Maria del Tiglio, l’un des monuments romans majeurs de la région."], ["Ambiance", "Gravedona est idéale pour une journée plus calme : on y retrouve la vie locale du haut lac, loin de la foule de Bellagio."], ["Conseils pratiques", "Stationner près du front de lac et parcourir le centre à pied. La visite peut facilement se combiner avec l’Abbaye de Piona."]], "links": [["Tourisme nord lac de Côme", "https://www.northlakecomo.net/en/"], ["Wikipedia", "https://fr.wikipedia.org/wiki/Gravedona_ed_Uniti"], ["GPS Gravedona", "https://maps.google.com/?q=Gravedona+ed+Uniti"]]}, "info-tiglio": {"title": "Santa Maria del Tiglio – joyau roman de Gravedona", "intro": "Une église romane remarquable, située au bord du lac, avec une architecture très caractéristique.", "blocks": [["Histoire", "Santa Maria del Tiglio a connu plusieurs phases historiques. Les sources touristiques locales évoquent un site de culte ancien, transformé au fil du temps, avant l’édifice roman actuel."], ["Architecture", "L’église est célèbre pour l’alternance de pierre claire et sombre, notamment marbre blanc de Musso et pierre noire d’Olcio. Sa façade se fond avec le clocher, ce qui lui donne une silhouette très forte."], ["À voir", "Les volumes romans, les fresques, le crucifix en bois et l’équilibre entre sobriété et puissance architecturale."], ["Conseils pratiques", "Visite courte mais très intéressante. Respecter le silence si l’église est ouverte au culte."]], "links": [["Fiche North Lake Como", "https://www.northlakecomo.net/en/181-Culture-Church-of-Santa-Maria-del-Tiglio"], ["Fiche Explore Lake Como", "https://www.explorelakecomo.com/go/santa-maria-del-tiglio"], ["GPS", "https://maps.google.com/?q=Santa+Maria+del+Tiglio+Gravedona"]]}, "info-piona": {"title": "Abbaye de Piona – cloître roman et silence monastique", "intro": "Un des lieux les plus paisibles du lac, posé sur la presqu’île d’Olgiasca, côté Colico.", "blocks": [["Histoire", "L’Abbaye de Piona est un ensemble religieux ancien de la rive de Lecco. La tradition du site remonte au haut Moyen Âge, avec une église primitive, puis un ensemble roman développé autour de San Nicola."], ["À ne pas manquer", "Le cloître roman, l’église, le panorama sur le haut lac et la boutique monastique. L’ensemble est simple, sobre et très reposant."], ["Ambiance", "Après les villas aristocratiques, Piona offre une autre facette du lac : spiritualité, pierre, silence et paysage."], ["Conseils pratiques", "Tenue correcte conseillée. Vérifier les horaires d’ouverture. Route d’accès plus étroite : conduite tranquille."]], "links": [["Visit Colico – Piona Abbey", "https://visitcolico.it/en/places-to-go/piona-abbey/"], ["Wikipedia", "https://fr.wikipedia.org/wiki/Abbaye_de_Piona"], ["GPS Abbaye", "https://maps.google.com/?q=Abbazia+di+Piona"]]}, "info-bard": {"title": "Fort de Bard – verrou de la Vallée d’Aoste", "intro": "Une forteresse spectaculaire qui domine l’entrée de la Vallée d’Aoste.", "blocks": [["Histoire", "Le Fort de Bard contrôle un passage stratégique entre la plaine du Pô, la Vallée d’Aoste et les routes alpines. Sa position lui a donné une importance militaire majeure pendant des siècles."], ["Napoléon", "En 1800, le fort ralentit fortement les troupes de Napoléon lors de la campagne d’Italie. L’ouvrage actuel conserve cette image de verrou défensif monumental."], ["À voir", "Les ascenseurs panoramiques, les remparts, les vues sur la vallée, le village de Bard et les expositions selon saison."], ["Conseils pratiques", "Prévoir 1h à 1h30 minimum. Les ascenseurs facilitent la montée. Vérifier les horaires et expositions avant le départ."]], "links": [["Site officiel Fort de Bard", "https://www.fortedibard.it/en/"], ["Complexe monumental", "https://www.fortedibard.it/en/the-monumental-complex/"], ["Wikipedia", "https://fr.wikipedia.org/wiki/Fort_de_Bard"]]}, "info-aosta": {"title": "Aoste – la Rome des Alpes", "intro": "Une ville compacte, agréable à pied, où les vestiges romains structurent encore le centre historique.", "blocks": [["Histoire", "Aoste fut fondée par les Romains sous le nom d’Augusta Praetoria. Son plan urbain et plusieurs monuments antiques sont encore lisibles aujourd’hui, ce qui explique son surnom de Rome des Alpes."], ["À ne pas manquer", "Arc d’Auguste, Porta Praetoria, Théâtre romain, cryptoportique du forum, cathédrale et ruelles piétonnes du centre."], ["Parcours conseillé", "Depuis un parking central, faire une boucle à pied : Arc d’Auguste → Porta Praetoria → Théâtre romain → centre piéton → cathédrale selon temps disponible."], ["Conseils pratiques", "Très bon arrêt déjeuner sur le trajet retour. Les grands parkings proches du centre sont plus pratiques que la recherche de places gratuites."]], "links": [["Office tourisme Vallée d’Aoste", "https://www.lovevda.it/en"], ["Wikipedia", "https://fr.wikipedia.org/wiki/Aoste"], ["GPS Théâtre romain", "https://maps.google.com/?q=Aosta+Roman+Theatre"]]}, "info-gsb": {"title": "Grand-Saint-Bernard – col historique ou tunnel rapide", "intro": "Un passage alpin majeur entre Italie et Suisse, à choisir selon météo, fatigue et temps disponible.", "blocks": [["Histoire", "Le col du Grand-Saint-Bernard est l’un des passages alpins historiques les plus connus. L’hospice et les chiens saint-bernard font partie de son imaginaire collectif."], ["Option col", "Plus belle si la météo est dégagée : vues d’altitude, lac, hospice et vraie ambiance alpine. Elle ajoute du temps et demande une conduite plus attentive."], ["Option tunnel", "Plus rapide et plus sûre si la météo est mauvaise, si vous êtes fatigués ou si la journée a pris du retard."], ["Conseils pratiques", "Décider à Aoste selon météo et énergie. En cas d’orage, brouillard ou fatigue, choisir le tunnel."]], "links": [["Wikipedia col", "https://fr.wikipedia.org/wiki/Col_du_Grand-Saint-Bernard"], ["GPS option col", "https://www.google.com/maps/dir/Aosta/Great+St+Bernard+Pass/Pontarlier"], ["GPS option tunnel", "https://www.google.com/maps/dir/Aosta/Great+St+Bernard+Tunnel/Pontarlier"]]}};
 const days=[
@@ -396,7 +432,7 @@ function saveChecks(){
 }
 function loadChecks(){
   const s=JSON.parse(localStorage.getItem('roadbook-checks')||'{}');
-  document.querySelectorAll('.step').forEach(st=>{const cb=st.querySelector('.check'); if(cb){cb.checked=!!s[st.dataset.id]; st.querySelector('.stepbox').classList.toggle('done',cb.checked); cb.addEventListener('change',()=>{st.querySelector('.stepbox').classList.toggle('done',cb.checked);saveChecks();});}});
+  document.querySelectorAll('.step').forEach(st=>{const cb=st.querySelector('.check'); if(cb){cb.checked=!!s[st.dataset.id]; st.querySelector('.stepbox').classList.toggle('done',cb.checked); cb.addEventListener('change',()=>{st.querySelector('.stepbox').classList.toggle('done',cb.checked);saveChecks();updateMenuStats();});}});
 }
 function toggleAllDone(){
   const current=document.querySelector('.day.active');
@@ -472,7 +508,7 @@ function pickGallery(){
 function photosKey(stepId){return 'roadbook-photos-'+stepId;}
 function getPhotos(stepId){try{return JSON.parse(localStorage.getItem(photosKey(stepId))||'[]')}catch(e){return []}}
 function savePhotos(stepId, arr){
-  try{localStorage.setItem(photosKey(stepId),JSON.stringify(arr));}
+  try{localStorage.setItem(photosKey(stepId),JSON.stringify(arr));updateMenuStats();}
   catch(e){alert("Stockage plein : supprime quelques photos dans l'application ou ajoute moins d'images.");}
 }
 async function handlePhotoFiles(files){
@@ -569,7 +605,7 @@ const TOUR_SUMMARY = {
   'j5-7':'Le Grand-Saint-Bernard est un passage alpin historique entre Italie et Suisse.'
 };
 function commentKey(stepId){return 'roadbook-comment-'+stepId;}
-function saveComment(stepId,value){localStorage.setItem(commentKey(stepId),value||'');}
+function saveComment(stepId,value){localStorage.setItem(commentKey(stepId),value||'');updateMenuStats();}
 function getComment(stepId){return localStorage.getItem(commentKey(stepId))||'';}
 function loadComments(){
   document.querySelectorAll('.step').forEach(st=>{
@@ -595,6 +631,7 @@ function getFavoritePhoto(stepId){
   const arr=getPhotos(stepId);
   return (arr.find(p=>p.favorite)||arr[0]||{}).data||'';
 }
+
 function exportTravelPDF(){
   const checked=[...document.querySelectorAll('.step')].filter(st=>{
     const cb=st.querySelector('.check');
@@ -604,21 +641,40 @@ function exportTravelPDF(){
     alert('Aucune étape cochée. Coche les étapes réalisées avant de générer le carnet.');
     return;
   }
-  const panel=document.getElementById('exportPanel');
-  const totalPhotos=checked.reduce((n,st)=>n+getPhotos(st.dataset.id).length,0);
-  let htmlOut='<div class="exportToolbar"><button class="btn" onclick="printExportPDF()">📘 Imprimer / Enregistrer en PDF</button><button class="btn secondary" onclick="downloadExportHTML()">💾 Télécharger HTML souvenir</button><button class="btn secondary" onclick="closeExportView()">Retour</button></div><div class="exportContent">';
-  htmlOut+='<div class="exportHint"><b>Sur iPhone/Safari :</b> si le bouton PDF ne réagit pas, utilise Partager → Imprimer → pincer l’aperçu → Enregistrer dans Fichiers.</div>';
-  htmlOut+='<div class="exportCover"><h1>Lac de Côme</h1><p>29 juillet → 2 août 2026</p><p>Camping Magic Lake – Dongo</p><p>'+checked.length+' étapes réalisées · '+totalPhotos+' photos ajoutées</p></div>';
+  const panel=document.getElementById('exportPanel') || createExportPanel();
+  const generalPhotos=getPhotos('general');
+  const totalPhotos=checked.reduce((n,st)=>n+getPhotos(st.dataset.id).length,0) + generalPhotos.length;
+  let htmlOut='<div class="exportContent"><div class="exportHint"><button onclick="window.print()">📘 Imprimer / enregistrer en PDF</button><button onclick="downloadExportHTML()">💾 Télécharger HTML souvenir</button><button onclick="closeExportView()">Fermer</button></div>';
+  htmlOut+='<div class="exportCover"><h1>Lac de Côme</h1><p>29 juillet → 2 août 2026</p><p>Camping Magic Lake – Dongo</p><p>'+checked.length+' étapes réalisées · '+totalPhotos+' photos ajoutées</p>';
+  if(generalPhotos.length){
+    htmlOut+='<div class="exportSouvenirs">';
+    generalPhotos.slice(0,8).forEach(p=>{ htmlOut+='<img src="'+p.data+'" alt="Souvenir du voyage">'; });
+    htmlOut+='</div>';
+  }
+  htmlOut+='</div>';
   let currentDay='';
   checked.forEach(st=>{
     const sid=st.dataset.id;
     const day=getStepDay(st);
-    if(day!==currentDay){currentDay=day;htmlOut+='<section class="exportDay"><h2>'+escapeHtml(day)+'</h2></section>';}
-    const title=getStepTitle(st), time=getStepTime(st), comment=getComment(sid), photo=getFavoritePhoto(sid);
-    htmlOut+='<article class="exportStep"><h3>✔ '+escapeHtml(title)+'</h3><div><b>Heure prévue :</b> '+escapeHtml(time)+'</div>';
-    if(photo) htmlOut+='<img src="'+photo+'" alt="Photo souvenir">';
+    if(day!==currentDay){
+      currentDay=day;
+      htmlOut+='<section class="exportDay"><h2>'+escapeHtml(day)+'</h2></section>';
+    }
+    const title=getStepTitle(st);
+    const time=getStepTime(st);
+    const comment=getComment(sid);
+    const photos=getPhotos(sid);
+    const fav=photos.find(p=>p.favorite) || photos[0] || null;
+    const orderedPhotos=fav ? [fav, ...photos.filter(p=>p.id!==fav.id)] : photos;
+    htmlOut+='<article class="exportStep"><h3>✔ '+escapeHtml(title)+'</h3>';
+    if(time) htmlOut+='<div><b>Heure prévue :</b> '+escapeHtml(time)+'</div>';
+    if(orderedPhotos.length){
+      htmlOut+='<div class="exportAllPhotos">';
+      orderedPhotos.forEach((p,i)=>{ htmlOut+='<img class="'+(i===0?'mainPhoto':'')+'" src="'+p.data+'" alt="Photo souvenir">'; });
+      htmlOut+='</div>';
+    }
     if(comment) htmlOut+='<div class="exportComment">'+escapeHtml(comment)+'</div>';
-    const tour=TOUR_SUMMARY[sid]||getManualStepSummary(sid)||'';
+    const tour=(typeof TOUR_SUMMARY!=='undefined' && TOUR_SUMMARY[sid]) ? TOUR_SUMMARY[sid] : (typeof getManualStepSummary==='function' ? getManualStepSummary(sid) : '');
     if(tour) htmlOut+='<div class="exportTour"><b>Info touristique :</b> '+escapeHtml(tour)+'</div>';
     htmlOut+='</article>';
   });
@@ -627,6 +683,15 @@ function exportTravelPDF(){
   document.body.classList.add('exporting');
   window.scrollTo(0,0);
 }
+function createExportPanel(){
+  const p=document.createElement('div');
+  p.id='exportPanel';
+  p.className='exportPanel';
+  document.body.appendChild(p);
+  return p;
+}
+
+
 function printExportPDF(){setTimeout(()=>window.print(),100);}
 function closeExportView(){document.body.classList.remove('exporting');}
 function downloadExportHTML(){
@@ -660,7 +725,7 @@ function saveManualStep(){
   const arr=getCustomSteps();
   arr.push({id,day,time,title,desc,created:new Date().toISOString()});
   saveCustomSteps(arr);
-  renderCustomSteps();loadChecks();loadComments();renderPhotoStrips();showDay(day);closeManualStepModal();
+  renderCustomSteps();loadChecks();loadComments();renderPhotoStrips();showDay(day);closeManualStepModal();updateMenuStats();
 }
 function deleteManualStep(id){
   if(!confirm('Supprimer cette étape libre ?'))return;
@@ -668,7 +733,7 @@ function deleteManualStep(id){
   saveCustomSteps(arr);
   localStorage.removeItem(commentKey(id));
   localStorage.removeItem(photosKey(id));
-  renderCustomSteps();loadChecks();loadComments();renderPhotoStrips();
+  renderCustomSteps();loadChecks();loadComments();renderPhotoStrips();updateMenuStats();
 }
 function getManualStepSummary(id){const s=getCustomSteps().find(x=>x.id===id);return s?(s.desc||'Étape ajoutée librement pendant le voyage.'):'';}
 function renderCustomSteps(){
@@ -689,13 +754,36 @@ function sortTimeline(timeline){
   steps.forEach(s=>timeline.appendChild(s));
 }
 
+
+function openMenu(){
+  updateMenuStats();
+  document.getElementById('menuOverlay').classList.add('open');
+}
+function closeMenu(){
+  document.getElementById('menuOverlay').classList.remove('open');
+}
+function updateMenuStats(){
+  const checked=[...document.querySelectorAll('.step .check')].filter(c=>c.checked).length;
+  let photos=0;
+  ['general', ...Array.from(document.querySelectorAll('.step')).map(s=>s.dataset.id)].forEach(id=>{
+    if(typeof getPhotos==='function') photos+=getPhotos(id).length;
+  });
+  let comments=0;
+  Array.from(document.querySelectorAll('.step')).forEach(st=>{
+    if(typeof getComment==='function' && getComment(st.dataset.id).trim()) comments++;
+  });
+  const a=document.getElementById('statSteps'); if(a)a.textContent=checked;
+  const b=document.getElementById('statPhotos'); if(b)b.textContent=photos;
+  const c=document.getElementById('statComments'); if(c)c.textContent=comments;
+}
+
 renderCustomSteps();
 
 loadChecks();
 loadComments();
-renderPhotoStrips(); showDay(localStorage.getItem('roadbook-current')||'day1');
+renderPhotoStrips(); updateMenuStats(); showDay(localStorage.getItem('roadbook-current')||'day1');
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  const sw=`self.addEventListener('install',e=>{e.waitUntil(caches.open('roadbook-v9').then(c=>c.addAll(['./'])))});self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)))})`;
+  const sw=`self.addEventListener('install',e=>{e.waitUntil(caches.open('roadbook-v12').then(c=>c.addAll(['./'])))});self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)))})`;
   navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'text/javascript'}))).catch(()=>{});
 }
 </script>
