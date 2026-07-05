@@ -2,6 +2,7 @@
   "name": "Roadbook Lac de Côme",
   "short_name": "Roadbook Como",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#f6f1e8",
   "theme_color": "#0f4c5c",
